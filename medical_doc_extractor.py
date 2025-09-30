@@ -1,4 +1,3 @@
-from google.auth.transport.requests import Request
 from google.oauth2.service_account import Credentials
 credentials_path = "prusandbx-nprd-uat-kw1ozq-dcfe6900463a.json"
 credentials = Credentials.from_service_account_file(credentials_path,
@@ -9,6 +8,7 @@ REGION = "asia-southeast1"
 
 import vertexai
 import json
+import os
 
 vertexai.init(project=PROJECT_ID, location=REGION, credentials=credentials)
 
@@ -63,7 +63,6 @@ if __name__ == "__main__":
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    import os
     for filename in os.listdir(input_path):
         if filename.endswith(".json"):
             # There two key in json file: status and result, 
@@ -77,22 +76,22 @@ if __name__ == "__main__":
             with open(os.path.join(input_path, filename), "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for item in data["result"]:
-                    medical_full_text = item["result_clarify"]["ocr"][0]["full_text"]
+                    document_id = item["doc_id"]
+                    medical_full_text = item["result_classify"]["ocr"][0]["full_text"]
                     print("Medical full text:", medical_full_text)
                     print("Extracted medical information:")
                     res = single_extract_medical_info(medical_full_text)
                     #convert res to json
                     res = "".join([r.text for r in res])
+                    clean_text = res.strip().strip("```json").strip("```")
+                    
                     try:
-                        json_res = json.loads(res)
+                        json_res = json.loads(clean_text)
+                        save_path = os.path.join(output_path, document_id + ".json")
+                        with open(save_path, "a", encoding="utf-8") as f_out:
+                            f_out.write(json.dumps(json_res, ensure_ascii=False) + "\n")
+                    except json.JSONDecodeError as e:
+                        print("JSON decode error:", e)
+                        print("Raw response:", res)
                     except Exception as e:
-                        print("Error parsing json:", e)
-                        print("Response text:", res)
-                        continue
-
-                    save_path = os.path.join(output_path, filename)
-                    with open(save_path, "a", encoding="utf-8") as f_out:
-                        f_out.write(json_res + "\n")
-                        
-    
-
+                        print("Unexpected error:", e)
