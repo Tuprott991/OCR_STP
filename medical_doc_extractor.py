@@ -15,10 +15,12 @@ vertexai.init(project=PROJECT_ID, location=REGION, credentials=credentials)
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 
 system_prompt = """You are a medical document extractor. 
+
 Extract the following information from the medical full text:
-1. Quá trình bệnh lý
-2. Tóm tắt lâm sàng
-3. Phương pháp điều trị
+1. Quá trình bệnh lý – focus on disease progression and timeline.
+2. Tóm tắt lâm sàng – summarize key clinical findings and diagnosis.
+3. Phương pháp điều trị – list treatments, procedures or medicines applied.
+
 
 IMPORTANT:
 - If the information is not available, say "Không có thông tin"
