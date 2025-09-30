@@ -25,7 +25,7 @@ IMPORTANT:
 - Be honest and don't make up answers, only create anwser based on the provided text
 - Do not answer anything outside of the medical full text
 - Must Answer in Vietnamese
-- The text is raw OCR, it may contain errors, do your best to understand the text, fix if necessary
+- The text is raw OCR, it may contain errors, do your best to understand the text, reasoning for fix if necessary
 - Format the output in JSON with keys "qua_trinh_benh_ly", "tom_tat_lam_sang", "phuong_phap_dieu_tri"
 - Example output:
 {
