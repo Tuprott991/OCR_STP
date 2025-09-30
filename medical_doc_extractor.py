@@ -82,7 +82,13 @@ if __name__ == "__main__":
                     print("Extracted medical information:")
                     res = single_extract_medical_info(medical_full_text)
                     #convert res to json
-                    json_res = json.dumps(res, ensure_ascii=False)
+                    res = "".join([r.text for r in res])
+                    try:
+                        json_res = json.loads(res)
+                    except Exception as e:
+                        print("Error parsing json:", e)
+                        print("Response text:", res)
+                        continue
 
                     save_path = os.path.join(output_path, filename)
                     with open(save_path, "a", encoding="utf-8") as f_out:
