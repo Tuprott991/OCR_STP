@@ -1,0 +1,8 @@
+pandas
+openai
+psycopg
+python-dotenv
+timescale-vector
+instructor
+anthropic
+cohere

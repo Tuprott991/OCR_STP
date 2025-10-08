@@ -1,4 +1,5 @@
 from elasticsearch import Elasticsearch
+from sqlalchemy import true
 from vertexai.language_models import TextEmbeddingModel
 import vertexai
 from google.oauth2.service_account import Credentials
@@ -17,15 +18,11 @@ es = Elasticsearch("http://localhost:9200")
 
 model = TextEmbeddingModel.from_pretrained("text-multilingual-embedding-002")
 
-# ==== Query ====
-query_text = input("Enter diagnosis: ")
-query_emb = model.get_embeddings([query_text])[0].values
-
-# Hybrid query: BM25 + Vector
-response = es.search(
+def hybrid_search(query_text, top_k=5):
+    response = es.search(
     index="icd_index",
     body={
-        "size": 5,
+        "size": top_k,
         "query": {
             "bool": {
                 "should": [
@@ -47,7 +44,43 @@ response = es.search(
             }
         }
     }
-)
+) 
+    return response
 
-for hit in response["hits"]["hits"]:
-    print(f"Score: {hit['_score']:.4f} | Code: {hit['_source']['code']} | Name: {hit['_source']['name']}")
+def get_embedding(text):
+    embedding = model.get_embeddings([text])[0].values
+    print(embedding)
+    return embedding
+
+# Use levenshtein distance for fuzzy search
+def fuzzy_search(query_text, top_k=5):
+    response = es.search(
+        index="icd_index",
+        body={
+            "size": top_k,
+            "query": {
+                "fuzzy": {
+                    "name": {
+                        "value": query_text,
+                        "fuzziness": "AUTO"
+                    }
+                }
+            }
+        }
+    )
+    return response
+
+
+# ==== Query ====
+while True:
+    query_text = input("Enter diagnosis: ")
+    if query_text.lower() in ["exit", "quit"]:
+        break
+    query_emb = get_embedding(query_text)
+
+    # response = hybrid_search(query_text, top_k=10)
+    response = hybrid_search(query_text, top_k=10)
+    print("Top ICD search results:")
+
+    for hit in response["hits"]["hits"]:
+        print(f"Score: {hit['_score']:.4f} | Code: {hit['_source']['code']} | Name: {hit['_source']['name']}")
